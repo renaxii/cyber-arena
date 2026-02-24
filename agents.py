@@ -1,6 +1,7 @@
 from openrouter import OpenRouter
 import os
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -11,20 +12,13 @@ client = OpenRouter(
     server_url="https://ai.hackclub.com/proxy/v1",
 )
 
-def call_gemini(prompt):
+def call_model(model_name, prompt):
     response = client.chat.send(
-        model="google/gemini-2.5-flash",
+        model=model_name,
         messages=[
-            {
-                "role": "system",
-                "content": "You are an AI agent in a cybersecurity simulation. You must respond ONLY with valid JSON. No explanations. No extra text."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
+            {"role": "system", "content": "Return ONLY valid JSON."},
+            {"role": "user", "content": prompt}
         ],
         response_format={"type": "json_object"}
     )
-
-    return response.choices[0].message.content
+    return json.loads(response.choices[0].message.content)

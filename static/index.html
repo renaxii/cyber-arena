@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Cyber Arena</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center p-8">
+
+  <h1 class="text-4xl font-bold mb-6">Cyber Arena</h1>
+
+  <button 
+    onclick="runSimulation()" 
+    class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl text-lg font-semibold transition mb-6">
+    Run Simulation
+  </button>
+
+  <div id="result" class="mb-6 text-xl"></div>
+
+  <div id="log" class="w-full max-w-3xl bg-gray-800 rounded-2xl p-6 space-y-3"></div>
+
+<script>
+async function runSimulation() {
+  document.getElementById("result").innerText = "Running...";
+  document.getElementById("log").innerHTML = "";
+
+  const response = await fetch("/play");
+  const data = await response.json();
+
+  document.getElementById("result").innerText =
+    "Winner: " + data.winner.toUpperCase();
+
+  data.history.forEach(turn => {
+    const div = document.createElement("div");
+    div.className = "border-b border-gray-700 pb-2";
+    div.innerHTML = `
+      <div class="font-semibold">Turn ${turn.turn}</div>
+      <div>Action: ${turn.action}</div>
+      <div>Result: ${turn.result}</div>
+      <div>Stealth: ${turn.stealth} | Security: ${turn.security}</div>
+    `;
+    document.getElementById("log").appendChild(div);
+  });
+}
+</script>
+
+</body>
+</html>

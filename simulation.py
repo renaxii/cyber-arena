@@ -1,27 +1,43 @@
 import random
 
+MAX_TURNS = 5
+
 class GameState:
     def __init__(self):
         self.attacker_stealth = 100
         self.server_security = 100
         self.turn = 1
+        self.history = []
 
-    def apply_action(self, action):
-        if action == "scan":
+    def apply_turn(self, attacker_action, defender_action):
+        # Defender
+        if defender_action == "patch":
+            self.server_security += 10
+        elif defender_action == "monitor":
+            self.attacker_stealth -= 10
+
+        # Attacker
+        if attacker_action == "scan":
             self.server_security -= 5
-            print("Attacker scans the system (-5 security)")
-        elif action == "exploit":
+
+        elif attacker_action == "exploit":
             success = random.random() > 0.4
             if success:
                 self.server_security -= 20
                 self.attacker_stealth -= 15
-                print("Exploit succeeded! (-20 security, -15 stealth)")
             else:
                 self.attacker_stealth -= 25
-                print("Exploit failed! (-25 stealth)")
-        elif action == "hide":
+
+        elif attacker_action == "hide":
             self.attacker_stealth += 10
-            print("Attacker hides (+10 stealth)")
+
+        self.history.append({
+            "turn": self.turn,
+            "attacker_action": attacker_action,
+            "defender_action": defender_action,
+            "stealth": self.attacker_stealth,
+            "security": self.server_security
+        })
 
         self.turn += 1
 
@@ -29,10 +45,5 @@ class GameState:
         return (
             self.server_security <= 0 or
             self.attacker_stealth <= 0 or
-            self.turn > 10
+            self.turn > MAX_TURNS
         )
-
-    def print_state(self):
-        print(f"\n--- Turn {self.turn} ---")
-        print(f"Stealth: {self.attacker_stealth}")
-        print(f"Security: {self.server_security}")
