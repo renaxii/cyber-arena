@@ -2,47 +2,400 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Cyber Arena</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber Arena - AI Battle</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulse-neon {
+      0%, 100% { text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00; }
+      50% { text-shadow: 0 0 5px #00ff00; }
+    }
+    .neon { animation: pulse-neon 2s infinite; }
+    @keyframes slide-in {
+      from { transform: translateX(-100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .slide-in { animation: slide-in 0.3s ease-out; }
+  </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center p-8">
+<body class="bg-gray-950 text-white min-h-screen">
+  
+  <div class="max-w-6xl mx-auto p-4">
+    <!-- Header -->
+    <div class="text-center mb-8 py-6 border-b border-cyan-500/30">
+      <h1 class="text-5xl font-bold mb-2 neon">⚔️ CYBER ARENA ⚔️</h1>
+      <p class="text-cyan-400">AI vs AI - Attack & Defense Simulation</p>
+    </div>
 
-  <h1 class="text-4xl font-bold mb-6">Cyber Arena</h1>
+    <!-- Navigation Tabs -->
+    <div class="flex gap-2 mb-6 border-b border-gray-700">
+      <button onclick="switchTab('home')" class="tab-btn px-4 py-2 border-b-2 border-cyan-500 text-cyan-400 font-semibold">
+        🏠 Home
+      </button>
+      <button onclick="switchTab('play')" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:border-cyan-500/50 text-gray-400 font-semibold">
+        🎮 Play Match
+      </button>
+      <button onclick="switchTab('tournament')" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:border-cyan-500/50 text-gray-400 font-semibold">
+        🏆 Tournament
+      </button>
+      <button onclick="switchTab('results')" class="tab-btn px-4 py-2 border-b-2 border-transparent hover:border-cyan-500/50 text-gray-400 font-semibold">
+        📊 Results
+      </button>
+    </div>
 
-  <button 
-    onclick="runSimulation()" 
-    class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl text-lg font-semibold transition mb-6">
-    Run Simulation
-  </button>
+    <!-- HOME TAB -->
+    <div id="home-tab" class="tab-content">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Quick Stats -->
+        <div class="bg-gray-900 border border-cyan-500/20 rounded-lg p-6">
+          <h2 class="text-2xl font-bold mb-4 text-cyan-400">📈 Quick Stats</h2>
+          <div class="space-y-3">
+            <div class="flex justify-between p-2 bg-gray-800 rounded">
+              <span>Total Matches:</span>
+              <span id="total-matches" class="font-bold text-cyan-400">0</span>
+            </div>
+            <div class="flex justify-between p-2 bg-gray-800 rounded">
+              <span>Available Attackers:</span>
+              <span id="attacker-count" class="font-bold text-orange-400">0</span>
+            </div>
+            <div class="flex justify-between p-2 bg-gray-800 rounded">
+              <span>Available Defenders:</span>
+              <span id="defender-count" class="font-bold text-blue-400">0</span>
+            </div>
+          </div>
+        </div>
 
-  <div id="result" class="mb-6 text-xl"></div>
+        <!-- Top Agents -->
+        <div class="bg-gray-900 border border-cyan-500/20 rounded-lg p-6">
+          <h2 class="text-2xl font-bold mb-4 text-cyan-400">⭐ Top Agents</h2>
+          <div id="top-agents" class="space-y-2">
+            <p class="text-gray-500">Play matches to build leaderboard...</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <div id="log" class="w-full max-w-3xl bg-gray-800 rounded-2xl p-6 space-y-3"></div>
+    <!-- PLAY TAB -->
+    <div id="play-tab" class="tab-content hidden">
+      <div class="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-6">
+        <h2 class="text-2xl font-bold mb-6 text-cyan-400">🎮 Play a Match</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Attacker Selection -->
+          <div>
+            <label class="block text-orange-400 font-bold mb-3">Select Attacker</label>
+            <select id="attacker-select" class="w-full bg-gray-800 border border-orange-500/30 rounded px-4 py-2 text-white">
+              <option>Loading attackers...</option>
+            </select>
+          </div>
 
-<script>
-async function runSimulation() {
-  document.getElementById("result").innerText = "Running...";
-  document.getElementById("log").innerHTML = "";
+          <!-- Defender Selection -->
+          <div>
+            <label class="block text-blue-400 font-bold mb-3">Select Defender</label>
+            <select id="defender-select" class="w-full bg-gray-800 border border-blue-500/30 rounded px-4 py-2 text-white">
+              <option>Loading defenders...</option>
+            </select>
+          </div>
+        </div>
 
-  const response = await fetch("/play");
-  const data = await response.json();
+        <button onclick="playMatch()" class="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 px-6 py-3 rounded-lg text-xl font-bold transition">
+          ⚡ START MATCH
+        </button>
+      </div>
 
-  document.getElementById("result").innerText =
-    "Winner: " + data.winner.toUpperCase();
+      <!-- Match Results -->
+      <div id="match-result" class="hidden bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-6">
+        <div class="mb-6">
+          <h3 class="text-2xl font-bold mb-4"><span id="result-winner" class="text-green-400">WINNER</span></h3>
+          <div class="grid grid-cols-3 gap-4 text-center mb-6">
+            <div class="bg-gray-800 rounded p-3">
+              <div class="text-orange-400 font-bold mb-2" id="result-attacker-name">Attacker</div>
+              <div class="text-2xl font-bold" id="result-attacker-score">0</div>
+            </div>
+            <div class="bg-gray-800 rounded p-3">
+              <div class="text-white font-bold mb-2">Match Info</div>
+              <div><span id="result-turns" class="text-cyan-400">0</span> turns</div>
+              <div><span id="result-systems" class="text-cyan-400">0</span> breached</div>
+            </div>
+            <div class="bg-gray-800 rounded p-3">
+              <div class="text-blue-400 font-bold mb-2" id="result-defender-name">Defender</div>
+              <div class="text-2xl font-bold text-blue-400">🛡️</div>
+            </div>
+          </div>
+        </div>
 
-  data.history.forEach(turn => {
-    const div = document.createElement("div");
-    div.className = "border-b border-gray-700 pb-2";
-    div.innerHTML = `
-      <div class="font-semibold">Turn ${turn.turn}</div>
-      <div>Action: ${turn.action}</div>
-      <div>Result: ${turn.result}</div>
-      <div>Stealth: ${turn.stealth} | Security: ${turn.security}</div>
-    `;
-    document.getElementById("log").appendChild(div);
-  });
-}
-</script>
+        <!-- Game Log -->
+        <div class="bg-gray-800 rounded-lg overflow-hidden">
+          <div class="bg-gray-700 px-4 py-2 font-bold text-cyan-400">Match History</div>
+          <div id="match-log" class="max-h-96 overflow-y-auto p-4 space-y-2 text-sm">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOURNAMENT TAB -->
+    <div id="tournament-tab" class="tab-content hidden">
+      <div class="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-6">
+        <h2 class="text-2xl font-bold mb-6 text-cyan-400">🏆 Run Tournament</h2>
+        <p class="mb-4 text-gray-400">Run every attacker vs every defender (one match each)</p>
+        <button onclick="runTournament()" class="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 px-6 py-3 rounded-lg text-xl font-bold transition text-gray-900">
+          🚀 RUN FULL TOURNAMENT
+        </button>
+      </div>
+
+      <!-- Tournament Results -->
+      <div id="tournament-result" class="hidden">
+        <div class="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-6">
+          <h3 class="text-xl font-bold text-cyan-400 mb-4">🥇 Final Leaderboard</h3>
+          <div id="tournament-leaderboard" class="space-y-2">
+          </div>
+        </div>
+
+        <div class="bg-gray-900 border border-cyan-500/20 rounded-lg p-6">
+          <h3 class="text-xl font-bold text-cyan-400 mb-4">📋 All Matches</h3>
+          <div id="tournament-matches" class="max-h-96 overflow-y-auto space-y-2">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS TAB -->
+    <div id="results-tab" class="tab-content hidden">
+      <div class="bg-gray-900 border border-cyan-500/20 rounded-lg p-6">
+        <h2 class="text-2xl font-bold mb-6 text-cyan-400">📊 Match History</h2>
+        <div id="results-list" class="space-y-3">
+          <p class="text-gray-500">No matches yet. Play some matches to see history!</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    let agents = { attackers: [], defenders: [] };
+    let currentTab = 'home';
+
+    // Initialize
+    async function init() {
+      await loadAgents();
+      updateStats();
+    }
+
+    function switchTab(tab) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      
+      // Show selected tab
+      document.getElementById(tab + '-tab').classList.remove('hidden');
+      
+      // Update buttons
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('border-cyan-500', 'text-cyan-400');
+        el.classList.add('border-transparent', 'text-gray-400');
+      });
+      event.target.classList.add('border-cyan-500', 'text-cyan-400');
+      event.target.classList.remove('border-transparent', 'text-gray-400');
+      
+      currentTab = tab;
+      
+      if (tab === 'results') {
+        loadResults();
+      }
+    }
+
+    async function loadAgents() {
+      try {
+        const res = await fetch(API_BASE + '/agents');
+        agents = await res.json();
+        
+        // Populate selects
+        const attacker = document.getElementById('attacker-select');
+        attacker.innerHTML = agents.attackers.map((a, i) => 
+          `<option value="${i}">${a.name} (${a.strategy})</option>`
+        ).join('');
+        
+        const defender = document.getElementById('defender-select');
+        defender.innerHTML = agents.defenders.map((d, i) => 
+          `<option value="${i}">${d.name} (${d.strategy})</option>`
+        ).join('');
+      } catch (e) {
+        console.error('Failed to load agents:', e);
+      }
+    }
+
+    async function updateStats() {
+      const leaderboard = await fetch(API_BASE + '/leaderboard').then(r => r.json());
+      
+      document.getElementById('attacker-count').innerText = agents.attackers.length;
+      document.getElementById('defender-count').innerText = agents.defenders.length;
+      
+      const results = await fetch(API_BASE + '/results?limit=100').then(r => r.json());
+      document.getElementById('total-matches').innerText = results.results.length;
+      
+      // Show top agents
+      const topAgents = leaderboard.leaderboard.slice(0, 5);
+      const topList = document.getElementById('top-agents');
+      
+      if (topAgents.length > 0) {
+        topList.innerHTML = topAgents.map((agent, i) => `
+          <div class="flex justify-between p-3 bg-gray-800 rounded border-l-4 border-yellow-500">
+            <span>${i + 1}. ${agent[0]}</span>
+            <span class="font-bold text-yellow-400">${agent[1]} pts</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    async function playMatch() {
+      const attacker = document.getElementById('attacker-select').value;
+      const defender = document.getElementById('defender-select').value;
+      
+      if (!attacker || !defender) return;
+      
+      const btn = event.target;
+      btn.disabled = true;
+      btn.innerText = '⏳ Running match...';
+      
+      try {
+        const res = await fetch(`${API_BASE}/play?attacker_idx=${attacker}&defender_idx=${defender}`);
+        const result = await res.json();
+        
+        displayMatchResult(result);
+        updateStats();
+      } catch (e) {
+        alert('Match failed: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '⚡ START MATCH';
+      }
+    }
+
+    function displayMatchResult(result) {
+      const container = document.getElementById('match-result');
+      
+      let winner = result.winner === 'attacker' ? `🎯 ${result.attacker} HACKED THE SYSTEM!` : 
+                   result.winner === 'defender' ? `🛡️ ${result.defender} STOPPED THE ATTACK!` :
+                   '⚔️ STALEMATE!';
+      
+      const winnerColor = result.winner === 'attacker' ? 'text-orange-400' : 
+                         result.winner === 'defender' ? 'text-blue-400' : 'text-yellow-400';
+      
+      document.getElementById('result-winner').className = winnerColor;
+      document.getElementById('result-winner').innerText = winner;
+      
+      document.getElementById('result-attacker-name').innerText = result.attacker;
+      document.getElementById('result-attacker-score').innerText = result.attacker_score;
+      document.getElementById('result-defender-name').innerText = result.defender;
+      document.getElementById('result-turns').innerText = result.turns;
+      document.getElementById('result-systems').innerText = result.systems_breached;
+      
+      // Show log
+      const log = document.getElementById('match-log');
+      log.innerHTML = result.history.map(turn => `
+        <div class="border-l-2 border-gray-600 pl-3 py-1">
+          <div class="font-bold text-cyan-400">Turn ${turn.turn}</div>
+          <div class="text-orange-400">🔴 ${turn.attacker_action} → ${turn.attacker_target}</div>
+          <div class="text-blue-400">🔵 ${turn.defender_action} → ${turn.defender_target}</div>
+          <div class="text-gray-400 text-xs">Stealth: ${turn.stealth} | Systems: ${turn.systems_breached} breached</div>
+        </div>
+      `).join('');
+      
+      container.classList.remove('hidden');
+      container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function runTournament() {
+      const btn = event.target;
+      btn.disabled = true;
+      btn.innerText = '⏳ Running tournament (' + (agents.attackers.length * agents.defenders.length) + ' matches)...';
+      
+      try {
+        const res = await fetch(API_BASE + '/tournament');
+        const result = await res.json();
+        
+        displayTournamentResult(result);
+        updateStats();
+      } catch (e) {
+        alert('Tournament failed: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '🚀 RUN FULL TOURNAMENT';
+      }
+    }
+
+    function displayTournamentResult(result) {
+      const container = document.getElementById('tournament-result');
+      
+      // Leaderboard
+      const leaderboard = document.getElementById('tournament-leaderboard');
+      leaderboard.innerHTML = result.leaderboard.map((agent, i) => `
+        <div class="flex justify-between items-center p-3 bg-gray-800 rounded border-l-4 border-cyan-500">
+          <div>
+            <span class="font-bold text-lg">
+              ${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '•'}
+              ${agent[0]}
+            </span>
+          </div>
+          <span class="text-cyan-400 font-bold text-lg">${agent[1]} pts</span>
+        </div>
+      `).join('');
+      
+      // Matches
+      const matches = document.getElementById('tournament-matches');
+      matches.innerHTML = result.matches.map(m => `
+        <div class="bg-gray-800 rounded p-3 border-l-2 ${m.winner === 'attacker' ? 'border-orange-500' : m.winner === 'defender' ? 'border-blue-500' : 'border-yellow-500'}">
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="font-bold text-orange-400">${m.attacker}</span>
+              <span class="text-gray-500"> vs </span>
+              <span class="font-bold text-blue-400">${m.defender}</span>
+            </div>
+            <div class="text-right">
+              <div class="font-bold ${m.winner === 'attacker' ? 'text-orange-400' : m.winner === 'defender' ? 'text-blue-400' : 'text-yellow-400'}">
+                ${m.winner.toUpperCase()} (${m.turns} turns)
+              </div>
+              <div class="text-xs text-gray-500">${m.systems_breached} systems breached</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      container.classList.remove('hidden');
+      container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function loadResults() {
+      const res = await fetch(API_BASE + '/results?limit=20');
+      const data = await res.json();
+      
+      const container = document.getElementById('results-list');
+      
+      if (data.results.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">No matches yet.</p>';
+        return;
+      }
+      
+      container.innerHTML = data.results.slice().reverse().map(r => `
+        <div class="bg-gray-800 rounded p-3 border-l-4 ${r.winner === 'attacker' ? 'border-orange-500' : r.winner === 'defender' ? 'border-blue-500' : 'border-yellow-500'}">
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="font-bold text-orange-400">${r.attacker}</span>
+              <span class="text-gray-500"> vs </span>
+              <span class="font-bold text-blue-400">${r.defender}</span>
+            </div>
+            <div class="font-bold ${r.winner === 'attacker' ? 'text-orange-400' : r.winner === 'defender' ? 'text-blue-400' : 'text-yellow-400'}">
+              ${r.winner === 'attacker' ? '🎯 HACKED' : r.winner === 'defender' ? '🛡️ DEFENDED' : '⚔️ DRAW'}
+            </div>
+          </div>
+          <div class="text-xs text-gray-400 mt-1">${r.turns} turns | ${r.systems_breached} systems breached</div>
+        </div>
+      `).join('');
+    }
+
+    // Initial load
+    init();
+  </script>
 
 </body>
 </html>
